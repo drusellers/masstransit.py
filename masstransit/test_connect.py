@@ -1,3 +1,4 @@
+'''
 import uuid
 from amqplib import client_0_8 as amqp
 
@@ -34,3 +35,4 @@ ch.basic_consume(
 )
 
 c.close()
+'''

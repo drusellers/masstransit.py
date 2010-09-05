@@ -1,11 +1,37 @@
+import pprint
+from amqplib import client_0_8 as amqp
+
 class Message(object):
-    def __init__(self,json_data):
-        self.json_data = json_data
+    """
+    Creates objects that behave much like a dictionaries, but allow nested
+    key access using object '.' (dot) lookups.
+    http://code.activestate.com/recipes/576586-dot-style-nested-lookups-over-dictionary-based-dat/
+    """
+    def __init__(self, d):
+        for k in d:
+            if isinstance(d[k], dict):
+                self.__dict__[k] = Message(d[k])
+            elif isinstance(d[k], (list, tuple)):
+                l = []
+                for v in d[k]:
+                    if isinstance(v, dict):
+                        l.append(DictDotLookup(v))
+                    else:
+                        l.append(v)
+                self.__dict__[k] = l
+            else:
+                self.__dict__[k] = d[k]
 
-    def __getattr__(self, name):
-        if (self.json_data.has_key(name)):
-            #how to handle nested hierarchies
-            return self.json_data[name]
-        else:
-           raise AttributeError,name
+    def __getitem__(self, name):
+        if name in self.__dict__:
+            return self.__dict__[name]
 
+    def __iter__(self):
+        return iter(self.__dict__.keys())
+
+    def __repr__(self):
+        return pprint.pformat(self.__dict__)
+
+    #I don't like this at all
+    def create(envelope):
+        return amqp.Message(envelope)

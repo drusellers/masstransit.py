@@ -1,13 +1,12 @@
-class Connection(object):
-    def __init__(self, host=DEFAULT_HOST, user_id=DEFAULT_USER_ID,
-        password=DEFAULT_PASSWORD, vhost=DEFAULT_VHOST, port=DEFAULT_PORT,
-        insist=DEFAULT_INSIST):
+from amqplib import client_0_8 as amqp
 
-        self.host = host
-        self.user_id = user_id
+class Connection(object):
+    def __init__(self, host, user_id, password, vhost, port, insist):
+        self.host = host #ip address or localhost
+        self.user_id = user_id 
         self.password = password
-        self.vhost = vhost
-        self.port = port
+        self.vhost = vhost 
+        self.port = port #5672
         self.insist = insist
 
         self.connect()
@@ -20,3 +19,7 @@ class Connection(object):
             virtual_host=self.vhost,
             insist=self.insist
         )
+
+    def channel(self):
+        self.channel = self.connection.connection.channel()
+        return self.channel

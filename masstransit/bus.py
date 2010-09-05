@@ -1,53 +1,24 @@
-import json
 import uuid
 from amqplib import client_0_8 as amqp
 
-class BusConfiguration:
-	def __init__(self):
-		self.host = '127.0.0.1'
-		self.user_id = 'guest'
-		self.password = 'guest'
-		self.vhost = '/'
-		self.port = 5672
-		self.insist = False
-		self.queue = 'default_queue'
-		self.routing_key = 'default_routing_key'
-		self.exchange = 'default_exchange'
-		self.durable = True
-		self.exclusive = False
-		self.auto_delete = False
-		self.deliver_mode = 2 #what is this?
-
 class Bus:
-    def __init__(self, options):
-		self.durable =o ptions.durable
-		self.auto_delete = option.auto_delete
-		self.connection = #hmm
-		self.channel = self.connection.connection.channel()
-		self.exchange = options.exchange
-		self.queue = options.queue
-		self.routing_key = options.routing_key
-		self.delivery_mode = options.delivery_mode
-		self.subscriptions = {}
-		self.exclusive = options.excusive
-		
+    def __init__(self, config):
+        subscriptions = {}
+        self.serializer = Serializer()
+        self.connection = Connection('172.16.43.141','guest','guest','/','5672',True)
+		self.channel = self.connection.channel()
+
+		self.queue = config.queue
+		self.durable = config.durable
+		self.exclusive = config.excusive
+		self.auto_delete = config.auto_delete
         self.channel.queue_declare(
             queue=self.queue,
             durable=self.durable,
             exclusive=self.exclusive,
             auto_delete=self.auto_delete
         )
-        self.channel.exchange_declare(
-            exchange=self.exchange,
-            type='direct',
-            durable=self.durable,
-            auto_delete=self.auto_delete
-        )
-        self.channel.queue_bind(
-            queue=self.queue,
-            exchange=self.exchange,
-            routing_key=self.routing_key
-        )
+
         self.channel.basic_consume(
             queue=self.queue,
             no_ack=True,
@@ -56,21 +27,30 @@ class Bus:
         )
 	    
     def publish(self, message):
-        json_name = message.__class__.__name__
-		json_data = json.dumps(message.__dict__)
-		envelope = json.dumps({'kind':json_name,'data':json_data})
-		message = amqp.Message(envelope)
-		self.channel.basic_publish(#lean this
-			message,
-			exchange = self.exchange, #learn exchange
-			routing_key = self.routing_key) #learn routing key
+        msg_name = message.__class__.__name__
+        msg_data = message
+        envelope = self.serializer.serialize({'kind':msg_name,'data':msg_data})
+        #how to do this better
+    	message = Message.create(envelope)
+    	self.channel.basic_publish(
+            message,
+            exchange = msg_name) 
 
     def subscribe(self, kind, callback):
+        self._bind(kind)
 		self.subscriptions[kind]=callback
 	
 	def unsubscribe(self, kind):
-		del self.callbacks[kind]
+        self._unbind(kind)
+		del self.subscriptions[kind]
 
+    def dispatch(self, message):
+        decoded = self.serializer.deserialize(message.body)
+        msg_name = decoded['kind']
+        msg_data = decoded['data']
+        callback = self.subscriptions[msg_name]
+        if callback:
+            callback(Message(msg_data))
 
     def close(self):
         if getattr(self,'channel'):
@@ -78,3 +58,18 @@ class Bus:
         if getattr(self, 'connection'):
             self.connection.close()
 
+    def _bind(self, kind):
+        self.channel.exchange_declare(
+            exchange = kind,
+            type = 'direct',
+            durable = self.durable,
+            auto_delete = self.auto_delete
+        )
+
+        self.channel.queue_bind(
+            queue=self.queue,
+            exchange=kind
+        )
+
+    def _unbind(self, kind):
+        pass #have no idea how to do this yet
