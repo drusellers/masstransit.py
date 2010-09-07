@@ -18,6 +18,12 @@ class TestSerialization(unittest.TestCase):
         encoded = s.serialize(d)
         self.assertEqual('{"greeting": "hi mom"}', encoded)
 
+    def test_dictionary_with_object(self):
+        s = Serializer()
+        d = {'msg': TestSerializationObject()}
+        encoded = s.serialize(d)
+        self.assertEqual('{"msg": {"age": 2, "name": "dru"}}', encoded)
+
     def test_serialization(self):
         s = Serializer()
         d = TestSerializationObject()
