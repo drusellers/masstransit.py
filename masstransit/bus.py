@@ -1,5 +1,4 @@
 import uuid
-from amqplib import client_0_8 as amqp
 
 class Bus:
     def __init__(self, config):
