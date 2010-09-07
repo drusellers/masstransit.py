@@ -31,7 +31,3 @@ class Message(object):
 
     def __repr__(self):
         return pprint.pformat(self.__dict__)
-
-    #I don't like this at all
-    def create(envelope):
-        return amqp.Message(envelope)
