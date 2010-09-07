@@ -1,4 +1,5 @@
-import masstransit
+from masstransit.bus import Bus
+from masstransit.config import Config
 
 cfg = Config()
 bus = Bus(cfg)

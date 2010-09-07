@@ -15,7 +15,12 @@ class Serializer(object):
     
     def todict(self, obj):
         data = {}
-        for key, value in obj.__dict__.iteritems():
+        if isinstance(obj, dict):
+            dic = obj
+        else:
+            dic = obj.__dict__
+
+        for key, value in dic.iteritems():
             try:
                 data[key] = self.todict(value)
             except AttributeError:

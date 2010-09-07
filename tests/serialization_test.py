@@ -12,6 +12,12 @@ class TestSerializationHierarchyObject:
         self.obj = TestSerializationObject()
 
 class TestSerialization(unittest.TestCase):
+    def test_dictionary(self):
+        s = Serializer()
+        d = {'greeting': 'hi mom'}
+        encoded = s.serialize(d)
+        self.assertEqual('{"greeting": "hi mom"}', encoded)
+
     def test_serialization(self):
         s = Serializer()
         d = TestSerializationObject()

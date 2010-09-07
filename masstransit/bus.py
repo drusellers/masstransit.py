@@ -2,14 +2,15 @@ import uuid
 
 class Bus:
     def __init__(self, config):
-        subscriptions = {}
+        self.subscriptions = {}
         self.serializer = config.serializer
-        #how do I mock this?
-        self.connection = Connection('172.16.43.141','guest','guest','/','5672',True)
-		self.channel = self.connection.channel()
-
-        _queue(config)
-
+        self.connection = config.transport.create_connection('172.16.43.141','guest','guest','/','5672')
+        self.channel = self.connection.connection.channel()
+        self.transport = config.transport
+        self._queue(config)
+        self.queue = config.queue #ugly: _queue
+        self.durable = config.durable #ugly: _bind
+        self.auto_delete = config.auto_delete #ugly: _bind
         self.channel.basic_consume(
             queue=self.queue,
             no_ack=True,
@@ -21,19 +22,18 @@ class Bus:
         msg_name = message.__class__.__name__
         msg_data = message
         envelope = self.serializer.serialize({'kind':msg_name,'data':msg_data})
-        #how do I mock this
-    	message = Message.create(envelope)
+    	message = self.transport.create_message(envelope)
     	self.channel.basic_publish(
             message,
             exchange = msg_name) 
 
     def subscribe(self, kind, callback):
         self._bind(kind)
-		self.subscriptions[kind]=callback
-	
-	def unsubscribe(self, kind):
+        self.subscriptions[kind]=callback
+
+    def unsubscribe(self, kind):
         self._unbind(kind)
-		del self.subscriptions[kind]
+        del self.subscriptions[kind]
 
     def dispatch(self, message):
         decoded = self.serializer.deserialize(message.body)
