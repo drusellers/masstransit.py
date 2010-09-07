@@ -3,7 +3,8 @@ import uuid
 class Bus:
     def __init__(self, config):
         subscriptions = {}
-        self.serializer = Serializer()
+        self.serializer = config.serializer
+        #how do I mock this?
         self.connection = Connection('172.16.43.141','guest','guest','/','5672',True)
 		self.channel = self.connection.channel()
 
@@ -17,6 +18,7 @@ class Bus:
             exclusive=self.exclusive,
             auto_delete=self.auto_delete
         )
+        self.queue = Queue()
 
         self.channel.basic_consume(
             queue=self.queue,
@@ -29,7 +31,7 @@ class Bus:
         msg_name = message.__class__.__name__
         msg_data = message
         envelope = self.serializer.serialize({'kind':msg_name,'data':msg_data})
-        #how to do this better
+        #how do I mock this
     	message = Message.create(envelope)
     	self.channel.basic_publish(
             message,

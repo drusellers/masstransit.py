@@ -1,5 +1,6 @@
 class Config:
 	def __init__(self):
+        self.serializer = Serializer() #default json serializer
 		self.host = '127.0.0.1'
 		self.user_id = 'guest'
 		self.password = 'guest'
