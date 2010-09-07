@@ -8,17 +8,7 @@ class Bus:
         self.connection = Connection('172.16.43.141','guest','guest','/','5672',True)
 		self.channel = self.connection.channel()
 
-		self.queue = config.queue
-		self.durable = config.durable
-		self.exclusive = config.excusive
-		self.auto_delete = config.auto_delete
-        self.channel.queue_declare(
-            queue=self.queue,
-            durable=self.durable,
-            exclusive=self.exclusive,
-            auto_delete=self.auto_delete
-        )
-        self.queue = Queue()
+        _queue(config)
 
         self.channel.basic_consume(
             queue=self.queue,
@@ -72,5 +62,16 @@ class Bus:
             exchange=kind
         )
 
+    def _queue(self, config):
+       self.channel.queue_declare(
+           queue = config.queue,
+           durable = config.durable,
+           exclusive = config.exclusive,
+           auto_delete = config.auto_delete
+       )
+
     def _unbind(self, kind):
         pass #have no idea how to do this yet
+
+    def _dequeue(self, queue):
+        pass #have no idea how to do this, do I care?
