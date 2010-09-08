@@ -1,6 +1,6 @@
 import uuid
 
-class Bus:
+class Bus(object):
     def __init__(self, config):
         self.subscriptions = {}
         self.serializer = config.serializer
@@ -17,13 +17,13 @@ class Bus:
             callback=self.dispatch,
             consumer_tag=str(uuid.uuid4())
         )
-	    
+
     def publish(self, message):
         msg_name = message.__class__.__name__
         msg_data = message
         envelope = self.serializer.serialize({'kind':msg_name,'data':msg_data})
-    	message = self.transport.create_message(envelope)
-    	self.channel.basic_publish(
+        message = self.transport.create_message(envelope)
+        self.channel.basic_publish(
             message,
             exchange = msg_name) 
 

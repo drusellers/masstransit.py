@@ -1,7 +1,7 @@
 from serializer import Serializer
 from transports.amqp import AMQP
 
-class Config:
+class Config(object):
     def __init__(self):
         self.transport = AMQP()
         self.serializer = Serializer() #default json serializer

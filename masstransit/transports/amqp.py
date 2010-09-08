@@ -1,6 +1,6 @@
 from amqplib import client_0_8 as amqp
 
-class AMQP:
+class AMQP(object):
     def create_message(self, data):
         return amqp.Message(data)
 
