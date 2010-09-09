@@ -1,4 +1,5 @@
 import uuid
+from message import Message
 
 class Bus(object):
     def __init__(self, config):

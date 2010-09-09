@@ -1,5 +1,4 @@
 import pprint
-from amqplib import client_0_8 as amqp
 
 class Message(object):
     """
@@ -15,7 +14,7 @@ class Message(object):
                 l = []
                 for v in d[k]:
                     if isinstance(v, dict):
-                        l.append(DictDotLookup(v))
+                        l.append(Message(v))
                     else:
                         l.append(v)
                 self.__dict__[k] = l
