@@ -26,4 +26,4 @@ class Serializer(object):
             except AttributeError:
                 data[key] = value
         return data
-    
+

@@ -9,7 +9,7 @@ class Config(object):
     def __init__(self):
         self.transport = AMQP()
         self.serializer = Serializer() #default json serializer
-        self.host = '127.0.0.1'
+        self.host = '172.16.43.141'
         self.user_id = 'guest'
         self.password = 'guest'
         self.vhost = '/'
