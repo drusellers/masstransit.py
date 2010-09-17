@@ -1,5 +1,6 @@
 from serializer import Serializer
 from transports.amqp import AMQP
+import ConfigParser
 
 class Config(object):
     """
@@ -16,9 +17,25 @@ class Config(object):
         self.port = 5672
         self.insist = False
         self.queue = 'default_queue'
-        self.routing_key = 'default_routing_key'
-        self.exchange = 'default_exchange'
         self.durable = True
         self.exclusive = False
         self.auto_delete = False
         self.deliver_mode = 2 #what is this?
+
+def config_file(filepath):
+    config = ConfigParser.ConfigParser()
+    config.readfp(open(filepath))
+    
+    def s(key):
+        return config.get('masstransit', key)
+    def i(key):
+        return config.getint('masstransit', key)
+    
+    cfg = Config()
+    cfg.queue = s('queue')
+    cfg.port = i('port')
+    cfg.host = s('host')
+    cfg.user_id = s('user_id')
+    cfg.password = s('password')
+    
+    return cfg

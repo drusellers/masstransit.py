@@ -23,7 +23,7 @@ class Bus(object):
         self._queue(config)
         self.durable = config.durable #ugly: _bind
         self.auto_delete = config.auto_delete #ugly: _bind
-        self.channel.basic_consume(
+        self.channel.basic_consume( #is this continual
             queue = self.queue,
             no_ack = True,
             callback = self.dispatch,
@@ -40,28 +40,32 @@ class Bus(object):
         msg_data = message
         envelope = self.serializer.serialize({'kind':msg_name,'data':msg_data})
         message = self.transport.create_message(envelope)
-        logging.debug('publishing %s' % (msg_name))
+        logging.debug('publishing %s', msg_name)
         self.channel.basic_publish(
             message,
-            exchange = msg_name) 
-
+            exchange = msg_name)
+        
     def subscribe(self, kind, callback):
         """
         this will register an exchange in rabbitmq for the 'kind' and then bind
         the queue to that exchange. it then sets the subscriptions[kind] to the
         callback provided.
-        
-        would like to support the __call__ style concept of wsgi
         """
+        if type(kind) == type:
+            kind = kind.__name__
+        
         self._bind(kind)
         self.subscriptions[kind]=callback
 
     def unsubscribe(self, kind):
+        if type(kind) == type:
+            kind = kind.__name__
+        
         self._unbind(kind)
         del self.subscriptions[kind]
 
     def close(self):
-        logging.debug("closing the bus at '%s'" %(self.queue))
+        logging.debug("closing the bus at '%s'", self.queue)
         #move to transport? what is the abstraction here?
         if getattr(self,'channel'):
             self.channel.close()
@@ -71,7 +75,7 @@ class Bus(object):
             self.connection.close()
 
     def _bind(self, kind):
-        logging.debug("declaring exchange '%s'" % (kind))
+        logging.debug("declaring exchange '%s'", kind)
         self.channel.exchange_declare(
             exchange = kind,
             type = 'direct',
@@ -79,7 +83,7 @@ class Bus(object):
             auto_delete = self.auto_delete
         )
 
-        logging.debug("binding '%s' directly to '%s'" % (self.queue, kind))
+        logging.debug("binding '%s' directly to '%s'", self.queue, kind)
         self.channel.queue_bind(
             queue = self.queue,
             exchange = kind
@@ -87,7 +91,7 @@ class Bus(object):
 
     def _queue(self, config):
         self.queue = config.queue
-        logging.debug("declaring queue '%s'" % (self.queue))
+        logging.debug("declaring queue '%s'", self.queue)
         self.channel.queue_declare(
             queue = config.queue,
             durable = config.durable,
@@ -97,8 +101,8 @@ class Bus(object):
 
     def _unbind(self, kind):
         #have no idea how to do this
-        logging.debug("unbinding '%s' from '%s'" % (self.queue, kind))
+        logging.debug("unbinding '%s' from '%s'", self.queue, kind)
 
     def _dequeue(self, queue):
         #have no idea how to do this, do I care?
-        logging.debug("undeclaring queue '%s'" % (queue))
+        logging.debug("undeclaring queue '%s'", queue)

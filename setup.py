@@ -15,7 +15,7 @@ setup(
     long_description = README,
     author = 'Dru Sellers',
     author_email = 'dru@drusellers.com',
-    install_requires = ['amqplib'],
+    install_requires = ['amqplib','logging'],
     packages = [
         'masstransit',
     ],
