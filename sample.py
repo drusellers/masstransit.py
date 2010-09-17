@@ -13,20 +13,19 @@ class Consumer(object):
     def __call__(self, msg):
         print "consumer: '%s'" % (msg.name)
 
-class SmartConsumer(masstransit.Consumer):
-    @message('MyMessage')
-    def consume(self, msg):
-        print msg.name
-
+#this needs to be a bit fancier
 b = Bus(Config())
+
 b.subscribe('MyMessage', dostuff)
 b.subscribe('MyMessage', Consumer())
 
-#b.subscribe(MyMessage, dostuff)
+b.subscribe(MyMessage, dostuff)
 
 #b.Subscribe<MyMessage>(msg=>Console.WriteLine(msg.Name));
 
 msg = MyMessage()
 
 b.publish(msg)
-#print 
+#print
+
+b.consume()
