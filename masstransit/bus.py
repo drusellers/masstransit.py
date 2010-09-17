@@ -5,7 +5,7 @@ class Bus(object):
     """
     publish and subscribe are the key methods on this class
     """
-    def __call___(self, message):
+    def dispatch(self, message):
         decoded = self.serializer.deserialize(message.body)
         msg_name = decoded['kind']
         msg_data = decoded['data']
@@ -55,7 +55,7 @@ class Bus(object):
          self.channel.basic_consume( #is this continual
             queue = self.queue,
             no_ack = True,
-            callback = self,
+            callback = self.dispatch,
             consumer_tag = str(uuid.uuid4())
         )
     

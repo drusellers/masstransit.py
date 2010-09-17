@@ -1,5 +1,10 @@
 from masstransit.bus import Bus
-from masstransit.config import Config
+from masstransit.config import config_file
+import time
+import logging
+
+LOG_FILENAME = 'test.log'
+logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
 
 #@message('')
 class MyMessage(object):
@@ -7,25 +12,24 @@ class MyMessage(object):
         self.name = 'lawrence'
 
 def dostuff(msg):
-    print msg.name
+    logging.info(msg.name)
 
 class Consumer(object):
     def __call__(self, msg):
         print "consumer: '%s'" % (msg.name)
 
 #this needs to be a bit fancier
-b = Bus(Config())
+b = Bus(config_file('sample.cfg'))
 
 b.subscribe('MyMessage', dostuff)
 b.subscribe('MyMessage', Consumer())
 
 b.subscribe(MyMessage, dostuff)
 
-#b.Subscribe<MyMessage>(msg=>Console.WriteLine(msg.Name));
-
 msg = MyMessage()
 
 b.publish(msg)
-#print
 
+print 'consuming'
 b.consume()
+time.sleep(3)
