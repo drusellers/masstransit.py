@@ -38,25 +38,30 @@ class Bus(object):
             kind = kind.__name__
         
         self._bind(kind)
-        self.subscriptions[kind]=callback
+        if not kind in self.subscriptions:
+            self.subscriptions[kind]=[]
+        self.subscriptions[kind].append(callback)
     
     def dispatch(self, message):
         decoded = self.serializer.deserialize(message.body)
         msg_name = decoded['kind']
         msg_data = decoded['data']
         logging.debug("consuming message '%s'" % (msg_name)) 
-        callback = self.subscriptions[msg_name]
-        if callback:
+        callbacks = self.subscriptions[msg_name]
+        for callback in callbacks:
             callback(Message(msg_data))
     
-    def consume(self):
-         self.transport.basic_consume( #is this continual
+    def start(self):
+        self.transport.basic_consume( #is this continual
             queue=self.queue,
             no_ack=True,
             callback=self.dispatch,
             consumer_tag=str(uuid.uuid4())
         )
-    
+        
+        while True:
+            self.transport.wait()
+        
     def get(self):
         return self.transport.basic_get(self.queue)
     

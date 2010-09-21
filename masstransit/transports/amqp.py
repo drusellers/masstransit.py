@@ -62,11 +62,14 @@ class AMQP(object):
     
     def basic_consume(self, queue, no_ack, callback, consumer_tag):
         self.channel.basic_consume( #is this continual
-            queue = self.queue,
+            queue = queue,
             no_ack = no_ack,
             callback = callback,
-            consumer_tag = conumer_tag
+            consumer_tag = consumer_tag
         )
+    
+    def wait(self):
+        self.channel.wait()
     
     def basic_publish(self, message, exchange):
         self.channel.basic_publish(

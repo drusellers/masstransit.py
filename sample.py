@@ -12,25 +12,27 @@ class MyMessage(object):
         self.name = 'lawrence'
 
 def dostuff(msg):
-    logging.info(msg.name)
+    logging.info("dostuff: %s", msg.name)
 
 class Consumer(object):
     def __call__(self, msg):
-        print "consumer: '%s'" % (msg.name)
+        logging.info("consumer callable: '%s'", msg.name)
 
 #this needs to be a bit fancier
 b = Bus(config_file('sample.cfg'))
 
 b.subscribe('MyMessage', dostuff)
 b.subscribe('MyMessage', Consumer())
-
-b.subscribe(MyMessage, dostuff)
+#b.subscribe(MyMessage, dostuff)
 
 msg = MyMessage()
 
 b.publish(msg)
+b.publish(msg)
 
-print 'consuming'
+#switch to consumer
+#msg = b.get()
+#b.dispatch(msg)
+b.start()
 
-msg = b.get()
-print msg.body
+
