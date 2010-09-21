@@ -31,5 +31,6 @@ msg = MyMessage()
 b.publish(msg)
 
 print 'consuming'
-b.consume()
-time.sleep(3)
+
+msg = b.get()
+print msg.body
