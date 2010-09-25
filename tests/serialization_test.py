@@ -52,3 +52,13 @@ class TestSerialization(unittest.TestCase):
         self.assertEqual('rob',obj.boss)
         self.assertEqual(2, obj.obj.age)
         self.assertEqual("dru", obj.obj.name)
+    
+    def test_metrics(self):
+        s = Serializer()
+        import masstransit.counters
+        masstransit.counters.increment('tests')
+        msg = masstransit.counters.StatisticsUpdate(masstransit.counters.raw_stats())
+        encoded = s.serialize(msg)
+        self.assertEqual('{"stats": {"tests": 1}}', encoded)
+        obj = s.deserialize(encoded)
+        self.assertEqual(1, obj.stats.tests)

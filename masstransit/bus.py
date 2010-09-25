@@ -1,5 +1,10 @@
+from gevent.monkey import patch_all
+patch_all()
+
 import uuid, logging
 from message import Message
+from masstransit import counters
+import gevent
 
 class Bus(object):
     """
@@ -46,6 +51,7 @@ class Bus(object):
         decoded = self.serializer.deserialize(message.body)
         msg_name = decoded['kind']
         msg_data = decoded['data']
+        counters.increment(msg_name)
         logging.debug("consuming message '%s'" % (msg_name)) 
         callbacks = self.subscriptions[msg_name]
         for callback in callbacks:
@@ -63,9 +69,16 @@ class Bus(object):
             consumer_tag=str(uuid.uuid4())
         )
         
-        while True:
-            self.transport.wait()
-        
+        self.generate_statistics()
+        self.transport.monitor()
+
+    def generate_statistics(self):
+        stats = counters.raw_stats()
+        msg = counters.StatisticsUpdate(stats)
+        print stats
+        self.publish(msg)
+        gevent.spawn_later(1, self.generate_statistics)
+    
     def get(self):
         return self.transport.basic_get(self.queue)
     

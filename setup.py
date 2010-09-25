@@ -11,11 +11,11 @@ setup(
     version = "0.0.1beta",
     url = 'http://github.com/drusellers/masstransit.py',
     license = 'Apache 2',
-    description = "An attempt to have a basic port of MassTransit to python",
+    description = "A port of the .Net MassTransit ESB to python. But with more awesome",
     long_description = README,
     author = 'Dru Sellers',
     author_email = 'dru@drusellers.com',
-    install_requires = ['amqplib','logging'],
+    install_requires = ['amqplib','gevent'],
     packages = [
         'masstransit',
     ],

@@ -2,6 +2,7 @@ from masstransit.bus import Bus
 from masstransit.config import config_file
 import time
 import logging
+from masstransit.counters import StatisticsUpdate
 
 LOG_FILENAME = 'test.log'
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
@@ -15,6 +16,8 @@ class MyMessage(object):
 def dostuff(msg):
     logging.info("dostuff: %s", msg.name)
 
+def report_stats(msg):
+    print msg.stats
 
 class Consumer(object):
     def __call__(self, msg):
@@ -24,16 +27,13 @@ class Consumer(object):
 b = Bus(config_file('sample.cfg'))
 
 b.subscribe('MyMessage', dostuff)
-#b.subscribe('MyMessage', Consumer())
-#b.subscribe(MyMessage, dostuff)
+b.subscribe(StatisticsUpdate, report_stats)
 
 msg = MyMessage()
-#for i in xrange(1,10000):
-#    b.publish(msg)
-#b.publish(msg)
+for i in xrange(1,20000):
+    b.publish(msg)
 
 #start the message pulling
-#import datetime
-#print datetime.datetime.now()
 b.start()
 
+print('hi')

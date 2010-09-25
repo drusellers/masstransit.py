@@ -1,7 +1,8 @@
 from amqplib import client_0_8 as amqp
 import socket
 import logging
-from masstransit.exceptions import TransportOpen
+from masstransit.exceptions import TransportOpenException
+import gevent
 
 class AMQP(object):
     """
@@ -76,6 +77,10 @@ class AMQP(object):
             callback = callback,
             consumer_tag = consumer_tag
         )
+    
+    def monitor(self):
+        while True:
+            gevent.spawn(self.wait).join()
     
     def wait(self):
         self.channel.wait()
