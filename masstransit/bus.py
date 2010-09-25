@@ -52,7 +52,11 @@ class Bus(object):
             callback(Message(msg_data))
     
     def start(self):
-        self.transport.basic_consume( #is this continual
+        """
+        Tells the bus to start listening for messages. This method blocks
+        forever. Need to come up with a better paradigm.
+        """
+        self.transport.basic_consume(
             queue=self.queue,
             no_ack=True,
             callback=self.dispatch,

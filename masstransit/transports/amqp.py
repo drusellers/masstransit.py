@@ -1,4 +1,7 @@
 from amqplib import client_0_8 as amqp
+import socket
+import logging
+from masstransit.exceptions import TransportOpen
 
 class AMQP(object):
     """
@@ -9,15 +12,21 @@ class AMQP(object):
         """
         creates a connection to the AMQP server
         default port is 5672
+        Will throw a TransportOpenException if it can't open the AMQP connection
         """
-        self.connection = amqp.Connection(
-            host = '%s:%s' % (host, port),
-            user_id = user_id,
-            password = password,
-            virtual_host = vhost,
-            insist = True
-        )
-        self.channel = self.connection.channel()
+        try:
+            self.connection = amqp.Connection(
+                host = '%s:%s' % (host, port),
+                user_id = user_id,
+                password = password,
+                virtual_host = vhost,
+                insist = True
+            )
+            self.channel = self.connection.channel()
+        except socket.error, e:
+            msg = "Couldn't open a connection to %s:%s" % (host, port)
+            logging.fatal(msg)
+            raise TransportOpenException(msg)
     
     def exchange_declare(self, exchange, durable, auto_delete):
         self.channel.exchange_declare(

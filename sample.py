@@ -4,35 +4,36 @@ import time
 import logging
 
 LOG_FILENAME = 'test.log'
-logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
+logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
 
-#@message('')
+
 class MyMessage(object):
     def __init__(self):
         self.name = 'lawrence'
 
+
 def dostuff(msg):
     logging.info("dostuff: %s", msg.name)
+
 
 class Consumer(object):
     def __call__(self, msg):
         logging.info("consumer callable: '%s'", msg.name)
 
-#this needs to be a bit fancier
+
 b = Bus(config_file('sample.cfg'))
 
 b.subscribe('MyMessage', dostuff)
-b.subscribe('MyMessage', Consumer())
+#b.subscribe('MyMessage', Consumer())
 #b.subscribe(MyMessage, dostuff)
 
 msg = MyMessage()
+#for i in xrange(1,10000):
+#    b.publish(msg)
+#b.publish(msg)
 
-b.publish(msg)
-b.publish(msg)
-
-#switch to consumer
-#msg = b.get()
-#b.dispatch(msg)
+#start the message pulling
+#import datetime
+#print datetime.datetime.now()
 b.start()
-
 
