@@ -13,6 +13,9 @@ from collections import defaultdict
 class Bus(object):
     """
     The bus abstracts the desired transportation, and manages the callbacks
+    orchestrates the 'threading'
+    
+    three main queues (data, control, poison)
     """
     
     def __init__(self, config):
@@ -83,7 +86,7 @@ class Bus(object):
         envelope = self.serializer.deserialize(message.body)
         msg_name = envelope['kind']
         msg_data = envelope['data']
-#        counters.increment(msg_name)
+        counters.increment(msg_name)
         logging.debug("consuming message '%s'", msg_name) 
         for callback in self.subscriptions[msg_name]:
             callback(Message(msg_data))

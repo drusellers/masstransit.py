@@ -75,7 +75,7 @@ class AMQP(object):
     
     
     def monitor(self, queue, callback):
-        self.basic_consume(
+        self.channel.basic_consume(
             queue=queue,
             no_ack=True,
             callback=callback,

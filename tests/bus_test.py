@@ -1,8 +1,7 @@
-from masstransit.config import Config
-from masstransit.bus import Bus
-import unittest
+import unittest, fudge
 from nose.plugins.attrib import attr
-import fudge
+from masstransit.bus import Bus
+from masstransit.config import Config
 
 class BusMessage(object):
     def __init__(self):
@@ -12,7 +11,7 @@ class BusTest(unittest.TestCase):
     
     def setUp(self):
         cfg = Config()
-        t = (fudge.Fake('tranny')
+        t = (fudge.Fake('transport')
                 .provides('open')
                 .provides('basic_publish')
                 .provides('unbind')
@@ -20,11 +19,6 @@ class BusTest(unittest.TestCase):
                 .provides('queue_declare'))
         cfg.transport = t
         self.cfg = cfg
-    
-    def test_start(self):
-        bus = Bus(self.cfg)
-        msg = BusMessage()
-        bus.publish(msg)
     
     def test_blank_unsubscribe(self):
         bus = Bus(self.cfg)
@@ -38,8 +32,9 @@ class BusTest(unittest.TestCase):
     def test_subscribe_type(self):
         bus = Bus(self.cfg)
         bus.subscribe(BusMessage, lambda x: 1)
-
+    
     #test_start
+    
     """
     def test_dispatch(self):
         bus = Bus(self.cfg)
@@ -55,5 +50,6 @@ class BusTest(unittest.TestCase):
         bus._dispatch(msg)
         self.assertEqual(True, self.a)
     """
+    
     def tearDown(self):
         fudge.verify()
