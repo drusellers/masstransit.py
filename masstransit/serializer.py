@@ -1,6 +1,8 @@
 import json
 from message import Message
 
+#does this really need to be a class?
+#just import different functions to be Xml or JSON?
 class Serializer(object):
     
     def serialize(self, obj):

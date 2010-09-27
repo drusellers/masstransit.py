@@ -1,24 +1,37 @@
 from gevent.monkey import patch_all
+import gevent
 patch_all()
 
-import uuid, logging
+import logging
 from message import Message
 from masstransit import counters
-import gevent
+from collections import defaultdict
 
+#durability a bus level or transport level choice?
+#temp subscription = auto-delete: true
+#perm subscription = auto-delete: false
 class Bus(object):
     """
-    publish and subscribe are the key methods on this class
+    The bus abstracts the desired transportation, and manages the callbacks
+    Key Methods:
+        publish
+        subscribe
     """
     
     def __init__(self, config):
-        self.subscriptions = {}
+        self.subscriptions = defaultdict(list)
         self.serializer = config.serializer
         self.transport = config.transport
+        self.queue = config.queue
+        self.durable = config.durable #ugly: bind
+        self.auto_delete = config.auto_delete #ugly: bind
         self.transport.open(config.host, vhost=config.vhost)
-        self._queue(config)
-        self.durable = config.durable #ugly: _bind
-        self.auto_delete = config.auto_delete #ugly: _bind
+        self.transport.queue_declare(
+            queue=config.queue,
+            durable=config.durable,
+            exclusive=config.exclusive,
+            auto_delete=config.auto_delete
+        )
     
     def publish(self, message):
         """
@@ -29,10 +42,9 @@ class Bus(object):
         msg_name = message.__class__.__name__
         msg_data = message
         envelope = self.serializer.serialize({'kind':msg_name, 'data':msg_data})
-        message = self.transport.create_message(envelope)
-        logging.debug('publishing %s', msg_name)
-        self.transport.basic_publish(message, exchange=msg_name)
+        self.transport.basic_publish(envelope, exchange=msg_name)
     
+    #permenant | temporary?
     def subscribe(self, kind, callback):
         """
         this will register an exchange in rabbitmq for the 'kind' and then bind
@@ -42,86 +54,45 @@ class Bus(object):
         if type(kind) == type:
             kind = kind.__name__
         
-        self._bind(kind)
-        if not kind in self.subscriptions:
-            self.subscriptions[kind]=[]
+        self.transport.bind(self.queue, kind, self.durable, self.auto_delete)
         self.subscriptions[kind].append(callback)
     
-    def dispatch(self, message):
-        decoded = self.serializer.deserialize(message.body)
-        msg_name = decoded['kind']
-        msg_data = decoded['data']
-        counters.increment(msg_name)
-        logging.debug("consuming message '%s'" % (msg_name)) 
-        callbacks = self.subscriptions[msg_name]
-        for callback in callbacks:
-            callback(Message(msg_data))
+    def unsubscribe(self, kind):
+        """
+        this will unregister the queue with the exchange in rabbitmq for the
+        'kind'. It then removes the callbacks in the subscriptions[kind]
+        """
+        if type(kind) == type:
+            kind = kind.__name__
+        
+        self.transport.unbind(kind, self.queue)
+        if kind in self.subscriptions:
+            del self.subscriptions[kind]
     
     def start(self):
         """
         Tells the bus to start listening for messages. This method blocks
-        forever. Need to come up with a better paradigm.
+        forever. Need to implement a better ctrl-c support.
         """
-        self.transport.basic_consume(
-            queue=self.queue,
-            no_ack=True,
-            callback=self.dispatch,
-            consumer_tag=str(uuid.uuid4())
-        )
-        
-        self.generate_statistics()
-        self.transport.monitor()
-
-    def generate_statistics(self):
-        stats = counters.raw_stats()
-        msg = counters.StatisticsUpdate(stats)
-        print stats
-        self.publish(msg)
-        gevent.spawn_later(1, self.generate_statistics)
-    
-    def get(self):
-        return self.transport.basic_get(self.queue)
-    
-    def unsubscribe(self, kind):
-        if type(kind) == type:
-            kind = kind.__name__
-        self._unbind(kind)
-        del self.subscriptions[kind]
+        self._generate_statistics()
+        self.transport.monitor(self.queue, self._dispatch)
     
     def close(self):
         logging.debug("closing the bus at '%s'", self.queue)
         if getattr(self, 'transport'):
             self.transport.close()
-
-    def _bind(self, kind):
-        logging.debug("declaring exchange '%s'", kind)
-        self.transport.exchange_declare(
-            exchange=kind,
-            durable=self.durable,
-            auto_delete=self.auto_delete
-        )
-
-        logging.debug("binding '%s' directly to '%s'", self.queue, kind)
-        self.transport.queue_bind(
-            queue=self.queue,
-            exchange=kind
-        )
-
-    def _queue(self, config):
-        self.queue = config.queue
-        logging.debug("declaring queue '%s'", self.queue)
-        self.transport.queue_declare(
-            queue=config.queue,
-            durable=config.durable,
-            exclusive=config.exclusive,
-            auto_delete=config.auto_delete
-        )
-
-    def _unbind(self, kind):
-        logging.debug("unbinding '%s' from '%s'", self.queue, kind)
-
-    def _dequeue(self, queue):
-        logging.debug("undeclaring queue '%s'", queue)
-        self.transpor.queue_delete(
-            queue=self.queue
-        )
+    
+    def _dispatch(self, message):
+        envelope = self.serializer.deserialize(message.body)
+        msg_name = envelope['kind']
+        msg_data = envelope['data']
+        counters.increment(msg_name)
+        logging.debug("consuming message '%s'", msg_name) 
+        for callback in self.subscriptions[msg_name]:
+            callback(Message(msg_data))
+    
+    def _generate_statistics(self):
+        stats = counters.raw_stats()
+        msg = counters.StatisticsUpdate(stats)
+        self.publish(msg)
+        gevent.spawn_later(1, self._generate_statistics)
