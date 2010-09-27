@@ -28,19 +28,8 @@ class AMQP(object):
             logging.fatal(msg)
             raise TransportOpenException(msg)
     
-    def exchange_declare(self, exchange, durable, auto_delete):
-        self.channel.exchange_declare(
-            exchange = exchange,
-            type = 'direct',
-            durable = durable,
-            auto_delete = auto_delete
-        )
-    
-    def queue_bind(self, queue, exchange):
-        self.channel.queue_bind(
-            queue = queue,
-            exchange = exchange
-        )
+    def close(self):
+        self.channel.close()
     
     def queue_declare(self, queue, durable, exclusive, auto_delete):
         logging.debug("declaring queue '%s'", queue)
@@ -64,40 +53,26 @@ class AMQP(object):
     
     def bind(self, queue, kind, durable, auto_delete):
         logging.debug("declaring exchange '%s'", kind)
-        self.exchange_declare(
+        self.channel.exchange_declare(
             exchange=kind,
             durable=durable,
+            type='fanout',
             auto_delete=auto_delete
         )
         
         logging.debug("binding '%s' directly to '%s'", queue, kind)
-        self.queue_bind(
+        self.channel.queue_bind(
             queue=queue,
             exchange=kind
         )
     
     def unbind(self, kind, queue):
-        logging.debug("")
-        self.queue_unbind(
+        logging.debug("unbinding")
+        self.channel.queue_unbind(
             queue=queue,
             exchange=kind
         )
     
-    def close(self):
-        self.channel.close()
-    
-    def basic_get(self, queue, no_ack=True):
-        return self.channel.basic_get(
-                    queue,
-                    no_ack=no_ack)
-    
-    def basic_consume(self, queue, no_ack, callback, consumer_tag):
-        self.channel.basic_consume( #is this continual
-            queue = queue,
-            no_ack = no_ack,
-            callback = callback,
-            consumer_tag = consumer_tag
-        )
     
     def monitor(self, queue, callback):
         self.basic_consume(
@@ -108,10 +83,7 @@ class AMQP(object):
         )
        
         while True:
-            gevent.spawn(self.wait).join()
-    
-    def wait(self):
-        self.channel.wait()
+            gevent.spawn(self._wait).join()
     
     def basic_publish(self, envelope, exchange):
         logging.debug('publishing to %s', exchange)
@@ -120,3 +92,6 @@ class AMQP(object):
             message,
             exchange = exchange
         )
+    
+    def _wait(self):
+        self.channel.wait()

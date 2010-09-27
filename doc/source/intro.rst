@@ -8,22 +8,30 @@ An Overview of MassTransit
 Main Classes of MassTransit
 ---------------------------
 
-Here is where we type lots of *cool* content
+Here is where we type lots of **cool** content add more cool things
+
+
+neet huh?
 
 .. note::
     this is a note
 
 Bus
 """
-.. autoclass:: masstransit.Bus
+.. autoclass:: masstransit.bus.Bus
+    :members:
 
 aoeu
-aa
+How to subscribe to the bus::
+    bus.subscribe(MessageType, lambda msg : print msg)
+    bus.start()
+
+I can type here
+    i can type here too
 
 Methods
 """""""
-.. function:: subscribe(kind, callback)
+.. function:: masstransit.bus.Bus.subscribe(kind, callback)
 
 .. function:: publish(msg)
 
-.. function:: start()

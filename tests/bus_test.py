@@ -34,6 +34,26 @@ class BusTest(unittest.TestCase):
         bus = Bus(self.cfg)
         bus.subscribe('test', lambda x: 1)
         bus.unsubscribe('test')
+    
+    def test_subscribe_type(self):
+        bus = Bus(self.cfg)
+        bus.subscribe(BusMessage, lambda x: 1)
 
+    #test_start
+    """
+    def test_dispatch(self):
+        bus = Bus(self.cfg)
+        self.a = False
+        def doit(msg):
+            self.a = True
+        
+        msg = fudge.Fake('msg').has_attr(
+            body = '{"kind": "test", "data": "{}"}'
+            )
+        
+        bus.subscribe('test', doit)
+        bus._dispatch(msg)
+        self.assertEqual(True, self.a)
+    """
     def tearDown(self):
         fudge.verify()

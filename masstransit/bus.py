@@ -13,9 +13,6 @@ from collections import defaultdict
 class Bus(object):
     """
     The bus abstracts the desired transportation, and manages the callbacks
-    Key Methods:
-        publish
-        subscribe
     """
     
     def __init__(self, config):
@@ -44,7 +41,7 @@ class Bus(object):
         envelope = self.serializer.serialize({'kind':msg_name, 'data':msg_data})
         self.transport.basic_publish(envelope, exchange=msg_name)
     
-    #permenant | temporary?
+    #persistant | transient?
     def subscribe(self, kind, callback):
         """
         this will register an exchange in rabbitmq for the 'kind' and then bind
@@ -86,7 +83,7 @@ class Bus(object):
         envelope = self.serializer.deserialize(message.body)
         msg_name = envelope['kind']
         msg_data = envelope['data']
-        counters.increment(msg_name)
+#        counters.increment(msg_name)
         logging.debug("consuming message '%s'", msg_name) 
         for callback in self.subscriptions[msg_name]:
             callback(Message(msg_data))
