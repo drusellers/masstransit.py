@@ -1,0 +1,4 @@
+rabbit mq is installed at
+/usr/local/Cellar/rabbitmq/2.1.1/lib/rabbitmq/erlang/lib/rabbitmq-2.1.1/ebin/rabbit.app
+
+/usr/local/sbin/rabbitmq-server

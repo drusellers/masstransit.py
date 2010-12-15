@@ -33,6 +33,7 @@ def config_file(filepath):
     
     cfg = Config()
     cfg.queue = s('queue')
+    cfg.vhost = s('vhost')
     cfg.port = i('port')
     cfg.host = s('host')
     cfg.user_id = s('user_id')

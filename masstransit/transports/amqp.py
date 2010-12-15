@@ -8,12 +8,13 @@ class AMQP(object):
     This transport is used when talking to AMQP/RabbitMQ
     """
 
-    def open(self, host, vhost, user_id = 'guest', password = 'guest', port = 5672):
+    def open(self, host, vhost='/', user_id = 'guest', password = 'guest', port = 5672):
         """
         creates a connection to the AMQP server
         default port is 5672
         Will throw a TransportOpenException if it can't open the AMQP connection
         """
+        logging.debug("opening a connection to %s:%s%s", host, port, vhost)
         try:
             self.connection = amqp.Connection(
                 host = '%s:%s' % (host, port),
@@ -31,15 +32,6 @@ class AMQP(object):
     def close(self):
         self.channel.close()
     
-    def queue_declare(self, queue, durable, exclusive, auto_delete):
-        logging.debug("declaring queue '%s'", queue)
-        self.channel.queue_declare(
-            queue = queue,
-            durable = durable,
-            exclusive = exclusive,
-            auto_delete = auto_delete
-        )
-    
     def queue_delete(self, queue):
         self.channel.queue_delete(
             queue = queue
@@ -51,28 +43,36 @@ class AMQP(object):
         """
         return amqp.Message(data)
     
-    def bind(self, queue, kind, durable, auto_delete):
-        logging.debug("declaring exchange '%s'", kind)
+    def bind(self, queue, exchange, durable, auto_delete):
+        logging.debug("declaring exchange '%s'", exchange)
         self.channel.exchange_declare(
-            exchange=kind,
+            exchange=exchange,
             durable=durable,
             type='fanout',
             auto_delete=auto_delete
         )
         
-        logging.debug("binding '%s' directly to '%s'", queue, kind)
+        logging.debug("declaring queue '%s'", queue)
+        self.channel.queue_declare(
+            queue = queue,
+            durable = durable,
+            exclusive = True, #how do I want to set all of these things
+            auto_delete = auto_delete
+        )
+        
+        logging.debug("binding '%s' directly to '%s'", queue, exchange)
         self.channel.queue_bind(
             queue=queue,
-            exchange=kind
+            exchange=exchange
         )
     
-    def unbind(self, kind, queue):
-        logging.debug("unbinding")
-        self.channel.queue_unbind(
-            queue=queue,
-            exchange=kind
-        )
-    
+    def unbind(self, exchange, queue):
+        #logging.debug("unbinding '%s' from '%s'", queue, exchange)
+        #self.channel.queue_unbind(
+        #    queue=queue,
+        #    exchange=exchange
+        #)
+        pass
     
     def monitor(self, queue, callback):
         self.channel.basic_consume(

@@ -25,13 +25,10 @@ class Bus(object):
         self.queue = config.queue
         self.durable = config.durable #ugly: bind
         self.auto_delete = config.auto_delete #ugly: bind
+        
+        #an IOError here could mean permissions
         self.transport.open(config.host, vhost=config.vhost)
-        self.transport.queue_declare(
-            queue=config.queue,
-            durable=config.durable,
-            exclusive=config.exclusive,
-            auto_delete=config.auto_delete
-        )
+        
     
     def publish(self, message):
         """
@@ -40,9 +37,9 @@ class Bus(object):
         .net and should be adopted to a more pythonic manner
         """
         msg_name = message.__class__.__name__
-        msg_data = message
-        envelope = self.serializer.serialize({'kind':msg_name, 'data':msg_data})
-        self.transport.basic_publish(envelope, exchange=msg_name)
+        envelope = Envelope(msg_name, message)
+        data = self.serializer.serialize(envelope)
+        self.transport.basic_publish(data, exchange=msg_name)
     
     #persistant | transient?
     def subscribe(self, kind, callback):

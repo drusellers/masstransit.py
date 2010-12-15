@@ -10,6 +10,14 @@ Main Classes of MassTransit
 
 Here is where we type lots of **cool** content add more cool things
 
+some sample C#
+
+.. sourcecode:: csharp
+
+    public class Bob
+    {
+    
+    }
 
 neet huh?
 
@@ -23,8 +31,9 @@ Bus
 
 aoeu
 How to subscribe to the bus::
+
     bus.subscribe(MessageType, lambda msg : print msg)
-    bus.start()
+
 
 I can type here
     i can type here too

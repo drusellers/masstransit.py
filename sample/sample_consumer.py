@@ -1,10 +1,13 @@
+import sys
+sys.path.append('..')
+
 from masstransit.bus import Bus
 from masstransit.config import config_file
 import time
 import logging
 from masstransit.counters import StatisticsUpdate
 
-LOG_FILENAME = 'test.log'
+LOG_FILENAME = 'test_sub.log'
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
 
 
@@ -24,16 +27,10 @@ class Consumer(object):
         logging.info("consumer callable: '%s'", msg.name)
 
 
-b = Bus(config_file('sample.cfg'))
+b = Bus(config_file('sample_consumer.cfg'))
 
 b.subscribe('MyMessage', dostuff)
 b.subscribe(StatisticsUpdate, report_stats)
 
-msg = MyMessage()
-for i in xrange(1,20000):
-    b.publish(msg)
-
 #start the message pulling
 b.start()
-
-print('hi')
