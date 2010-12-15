@@ -85,7 +85,7 @@ class AMQP(object):
         while True:
             gevent.spawn(self._wait).join()
     
-    def basic_publish(self, envelope, exchange):
+    def publish(self, envelope, exchange):
         logging.debug('publishing to %s', exchange)
         message = self.create_message(envelope)
         self.channel.basic_publish(

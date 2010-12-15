@@ -4,6 +4,7 @@ patch_all()
 
 import logging
 from message import Message
+from envelope import Envelope
 from masstransit import counters
 from collections import defaultdict
 
@@ -39,7 +40,7 @@ class Bus(object):
         msg_name = message.__class__.__name__
         envelope = Envelope(msg_name, message)
         data = self.serializer.serialize(envelope)
-        self.transport.basic_publish(data, exchange=msg_name)
+        self.transport.publish(data, exchange=msg_name)
     
     #persistant | transient?
     def subscribe(self, kind, callback):

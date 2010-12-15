@@ -6,7 +6,7 @@ class AmqpTest(unittest.TestCase):
     
     def setUp(self):
         self.amqp = AMQP()
-        self.amqp.open('localhost','/publisher')
+        self.amqp.open('localhost', '/')
 
     @attr('integration')
     def test_newingup(self):
@@ -19,7 +19,7 @@ class AmqpTest(unittest.TestCase):
     
     @attr('integration')
     def test_basicpublish(self):
-        self.amqp.basic_publish('hello', 'unittest')
+        self.amqp.publish('hello', 'unittest')
     
     @attr('integration')
     def test_bind(self):
